@@ -1,0 +1,15 @@
+esphome:
+  name: esp-phonewatch
+  platform: ESP32
+  board: mhetesp32minikit
+  libraries:
+    - smartphone-companions/ESP32 BLE ANCS Notifications@^0.0.1
+
+external_components:
+  - source:
+      type: local
+      path: components
+# Enable logging
+logger:
+
+ancs:
