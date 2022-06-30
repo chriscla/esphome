@@ -1,2 +1,0 @@
-# esphome
-My esphome hacks.
