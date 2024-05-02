@@ -10,8 +10,7 @@ namespace esphome
     void DDCControlComponent::setup()
     {
 
-      ESP_LOGCONFIG(TAG);
-      ESP_LOGI(TAG, "Starting ddccontrol setup");
+      ESP_LOGCONFIG(TAG, "Setting up DDCControl");
 
       this->set_i2c_address(0x37);
       // uint8_t channel = 0x3;

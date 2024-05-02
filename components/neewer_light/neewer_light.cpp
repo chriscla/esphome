@@ -8,7 +8,7 @@ static const char *const TAG = "neewer_light";
 
 void NeewerLight::setup() {
 
-    //ESP_LOGCONFIG(TAG);
+    ESP_LOGCONFIG(TAG), "NeewerLight setup";
     ESP_LOGI(TAG, "Starting setup");
 
     uint8_t res = this->a7105_chip_->reset();
