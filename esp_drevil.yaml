@@ -4,9 +4,7 @@ esphome:
   board: d1_mini
 
 external_components:
-  - source:
-      type: local
-      path: components
+  - source: components
     
 # Enable logging
 logger:
@@ -51,7 +49,6 @@ select:
       0x03: HDMI1
       0x11: HDMI2
 
-
 sensor:
   - platform: adc
     id: photocell_measurement
@@ -82,7 +79,8 @@ sensor:
               state: "2"
 
 light:
-  - platform: neewer_light
+  - platform: "neewer_light"
+    id: lightshine
     channel: 1
     group: 1
     cold_white_color_temperature: 6500K
@@ -92,5 +90,3 @@ text_sensor:
   - platform: template
     name: "Active USB Input"
     id: usb_input_sensor
-
-      

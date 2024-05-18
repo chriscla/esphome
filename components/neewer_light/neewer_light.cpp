@@ -3,7 +3,7 @@
 namespace esphome {
 namespace light {
 
-static const char *const TAG = "neewer_light";
+static const char *const TAG = "NeewerLight";
 
 
 void NeewerLight::setup() {
