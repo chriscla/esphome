@@ -1,4 +1,4 @@
-#include "DDCControl.h"
+#include "ddc_control.h"
 
 namespace esphome
 {
@@ -7,10 +7,11 @@ namespace esphome
 
     static const char *const TAG = "ddccontrol";
 
-    void DDCControlComponent::setup()
+    void DDCControl::setup()
     {
 
       ESP_LOGCONFIG(TAG, "Setting up DDCControl");
+      ESP_LOGD(TAG, "Setting address to ddc control address: 0x37");
 
       this->set_i2c_address(0x37);
       // uint8_t channel = 0x3;
@@ -19,7 +20,7 @@ namespace esphome
       ESP_LOGI(TAG, "Setup complete.");
     }
 
-    void DDCControlComponent::control(const std::string &value)
+    void DDCControl::control(const std::string &value)
     {
 
       ESP_LOGI(TAG, "Requested to control. New Value: %s", value.c_str());
@@ -38,7 +39,7 @@ namespace esphome
 
     // op: VCP opcode. Can be found with ddc capabilities
     // value: 16bit value
-    void DDCControlComponent::setVCP(uint8_t op, uint16_t value)
+    void DDCControl::setVCP(uint8_t op, uint16_t value)
     {
 
       ESP_LOGI(TAG, "Starting VCP Set.  op: 0x%02X  value: 0x%04X", op, value);
@@ -71,7 +72,7 @@ namespace esphome
 
     // op: VCP opcode. Can be found with ddc capabilities
     // value: 16bit value
-    uint16_t DDCControlComponent::getVCP(uint8_t op)
+    uint16_t DDCControl::getVCP(uint8_t op)
     {
 
       ESP_LOGI(TAG, "Starting VCP Get.  op: 0x%02X", op);

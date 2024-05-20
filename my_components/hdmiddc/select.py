@@ -11,7 +11,7 @@ DEPENDENCIES = ["i2c"]
 CONF_DDC_INPUT_SELECT = "ddc_input_select_id"
 
 ddccontrol_ns = cg.esphome_ns.namespace("ddccontrol")
-DDC_INPUT_SELECT = ddccontrol_ns.class_("DDCControlComponent", select.Select, i2c.I2CDevice, cg.Component)
+DDC_INPUT_SELECT = ddccontrol_ns.class_("DDCControl", select.Select, i2c.I2CDevice, cg.Component)
 
 def ensure_option_map(value):
     cv.check_not_templatable(value)
@@ -26,7 +26,6 @@ def ensure_option_map(value):
         raise cv.Invalid("Mapping values must be unique.")
 
     return value
-
 
 CONFIG_SCHEMA = select.SELECT_SCHEMA.extend(
     {

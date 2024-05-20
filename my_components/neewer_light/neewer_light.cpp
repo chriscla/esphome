@@ -1,14 +1,16 @@
-#include "NeewerLight.h"
+#include "neewer_light.h"
+
+using namespace esphome;
 
 namespace esphome {
-namespace light {
+namespace neewer_light {
 
 static const char *const TAG = "NeewerLight";
 
 
 void NeewerLight::setup() {
 
-    ESP_LOGCONFIG(TAG), "NeewerLight setup";
+    ESP_LOGCONFIG(TAG, "NeewerLight setup");
     ESP_LOGI(TAG, "Starting setup");
 
     uint8_t res = this->a7105_chip_->reset();
@@ -77,7 +79,7 @@ void NeewerLight::setup() {
         uint8_t calc_value = 0;
         this->a7105_chip_->read_reg(a7105::A7105_02_CALC, &calc_value);
         //TODO: Look this is mis(ing curly braces!!!!!! Clear bug
-        //if(!calc_value)
+        if(!calc_value)
             break;
     }
     if (millis() - ms >= 500) {
@@ -104,7 +106,7 @@ void NeewerLight::setup() {
     return traits;
   }
 
-  void NeewerLight::write_state(LightState *state) {
+  void NeewerLight::write_state(light::LightState *state) {
     bool light_state;
     state->current_values_as_binary(&light_state);
 
@@ -166,7 +168,7 @@ void NeewerLight::setup() {
   checksum_data = data;
   checksum_data.push_back(checksum);
 
-  ESP_LOGD(TAG, "Sending command: %s", hexencode(checksum_data).c_str());    
+  ESP_LOGD(TAG, "Sending command: %s", format_hex_pretty(checksum_data).c_str());    
 
   for (int num_repeats=0; num_repeats < 4; num_repeats++) {
     for (int i=0; i<4;i++) {

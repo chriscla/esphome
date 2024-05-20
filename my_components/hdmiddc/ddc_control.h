@@ -10,7 +10,7 @@
 namespace esphome {
 namespace ddccontrol {
 
-class DDCControlComponent : 
+class DDCControl : 
   public Component, public select::Select, public i2c::I2CDevice {
 
  public:

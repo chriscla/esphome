@@ -12,16 +12,15 @@
 #define NEEWER_CH2 0x7
 
 namespace esphome {
-namespace light {
+namespace neewer_light {
 
 class NeewerLight : 
-  public Component, public LightOutput {
+  public Component, public light::LightOutput {
 
- public:
+  public:
   
-  void setup() override;
+    void setup() override;
 
-  public: 
     /**
      * Write the state to this light
      */
@@ -43,7 +42,7 @@ class NeewerLight :
     float cold_white_temperature_;
     float warm_white_temperature_;
     int8_t power_state_;
-  
+
   }; //end class
 }  // namespace light
 }  // namespace esphome

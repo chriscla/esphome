@@ -1,5 +1,5 @@
 esphome:
-  name: drevil
+  name: neewer2
   platform: ESP8266
   board: d1_mini
 
@@ -15,11 +15,12 @@ external_components:
 logger:
   level: VERBOSE
   logs:
+    sensor: ERROR
     adc: ERROR
 
 # Enable Home Assistant API
 api:
-  password: !secret api_password
+
 
 ota:
   password: !secret ota_password
@@ -35,26 +36,23 @@ wifi:
     password: !secret ap_password
   
 i2c:
-  scl: D1
-  sda: D2
+  scl: SCL
+  sda: SDA
   scan: False
   frequency: 50khz
-  id: i2c_bus_a
 
 spi:
   clk_pin: D5
   mosi_pin: D7
   miso_pin: D6
-  interface: hardware
 
 a7105:
   cs_pin: D8
 
 select:
-  - platform: hdmiddc
+  - platform: "hdmiddc"
     name: "HDMI Input Select"
-    id: hdmi_input_select2
-    i2c_id: i2c_bus_a
+    id: hdmi_input_select
     options: 
       0x01: DISPLAYPORT
       0x03: HDMI1
@@ -78,54 +76,52 @@ binary_sensor:
     filters:
       - delayed_on: 10ms
 
-# sensor:
-#   - platform: adc
-#     id: photocell_measurement
-#     pin: A0
-#     name: "Photocell 0"
-#     device_class: illuminance
-#     update_interval: 500ms
-#     unit_of_measurement: lx
-#     filters:
-#       - lambda: |-
-#           return (x / 10000.0) * 2000000.0;
-#     on_value_range: 
-#       - above: 150
-#         then:
-#           - select.set: 
-#               id: hdmi_input_select
-#               option: "DISPLAYPORT"
-#           - text_sensor.template.publish: 
-#               id: usb_input_sensor
-#               state: "1"              
-#       - below: 150
-#         then:
-#           - select.set:
-#               id: hdmi_input_select
-#               option: "HDMI2"
-#           - text_sensor.template.publish: 
-#               id: usb_input_sensor
-#               state: "2"
-
+sensor:
+  - platform: adc
+    id: photocell_measurement
+    pin: A0
+    name: "Photocell 0"
+    device_class: illuminance
+    update_interval: 500ms
+    unit_of_measurement: lx
+    filters:
+      - lambda: |-
+          return (x / 10000.0) * 2000000.0;
+    on_value_range: 
+      - above: 150
+        then:
+          - select.set: 
+              id: hdmi_input_select
+              option: "DISPLAYPORT"
+          - text_sensor.template.publish: 
+              id: usb_input_sensor
+              state: "1"              
+      - below: 150
+        then:
+          - select.set:
+              id: hdmi_input_select
+              option: "HDMI2"
+          - text_sensor.template.publish: 
+              id: usb_input_sensor
+              state: "2"
 
 light:
   - platform: neewer_light
     id: left_panel
     name: Left Panel
-    channel: 3
-    group: 0x01
-    cold_white_color_temperature: 5600 K
-    warm_white_color_temperature: 3150 K
+    channel: 1
+    group: 1
+    cold_white_color_temperature: 6500K
+    warm_white_color_temperature: 2700K
   - platform: neewer_light
     id: right_panel
     name: Right Panel
-    channel: 3
-    group: 0x41
-    cold_white_color_temperature: 5600 K
-    warm_white_color_temperature: 3150 K
+    channel: 2
+    group: 1
+    cold_white_color_temperature: 6500K
+    warm_white_color_temperature: 2700K
 
 text_sensor:
   - platform: template
     name: "Active USB Input"
     id: usb_input_sensor
-
