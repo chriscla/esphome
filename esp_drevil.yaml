@@ -50,9 +50,12 @@ spi:
 a7105:
   cs_pin: D8
 
+hdmiddc:
+
 sensor:
   - platform: hdmiddc
-    name: "DDC Brightness"
+    brightness:
+      name: "Monitor Brightness"
 
 # select:
 #   - platform: hdmiddc

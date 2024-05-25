@@ -8,6 +8,11 @@ namespace esphome
     static const char *const TAG = "ddcdevice";
 
 
+    // void DDCDevice::dump_config()
+    // {
+    //   LOG_I2C_DEVICE(this);
+    // }
+
     // void DDCDevice::control(const std::string &value)
     // {
 
