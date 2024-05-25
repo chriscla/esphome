@@ -1,31 +1,21 @@
-
-
-external_components:
-  - source:
-      type: local
-      path: my_components
-
 esphome:
-  name: monitorswitcher4
-  friendly_name: Monitor Switcher 4
+  name: monitorswitcher8
   platform: ESP8266
   board: d1_mini
 
-web_server:
-  port: 80
-
+external_components:
+  - source: my_components
+    components: [
+    ddc
+  ]
+    
 # Enable logging
 logger:
   level: DEBUG
-  logs:
-    adc: ERROR
-    api,service: ERROR
-    component: ERROR
 
 # # Enable Home Assistant API
 # api:
-#   encryption:
-#     key: !secret api_key
+#   password: !secret api_password
 
 ota:
   password: !secret ota_password
@@ -37,56 +27,27 @@ wifi:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: MonitorSwitcher
+    ssid: drevil
     password: !secret ap_password
-
+  
 i2c:
   scl: SCL
   sda: SDA
   scan: False
   frequency: 50khz
 
-select:
-  - platform: "hdmiddc"
-    name: "HDMI Input Select"
-    id: hdmi_input_select
-    options: 
-      0x01: DISPLAYPORT
-      0x03: HDMI1
-      0x11: HDMI2
+ddc:
 
-# sensor:
-#   - platform: adc
-#     id: photocell_measurement
-#     pin: A0
-#     name: "Photocell 0"
-#     device_class: illuminance
-#     update_interval: 500ms
-#     unit_of_measurement: lx
-#     filters:
-#       - lambda: |-
-#           return (x / 10000.0) * 2000000.0;
-#     on_value_range: 
-#       - above: 150
-#         then:
-#           - select.set: 
-#               id: hdmi_input_select
-#               option: "DISPLAYPORT"
-#           - text_sensor.template.publish: 
-#               id: usb_input_sensor
-#               state: "1"              
-#       - below: 150
-#         then:
-#           - select.set:
-#               id: hdmi_input_select
-#               option: "HDMI2"
-#           - text_sensor.template.publish: 
-#               id: usb_input_sensor
-#               state: "2"
+sensor:
+  - platform: ddc
+    brightness:
+      name: "Monitor Brightness"
 
-# text_sensor:
-#   - platform: template
-#     name: "Active USB Input"
-#     id: usb_input_sensor
-
-      
+# select:
+#   - platform: hdmiddc
+#     name: "HDMI Input Select"
+#     id: hdmi_input_select
+#     options: 
+#       0x01: DISPLAYPORT
+#       0x03: HDMI1
+#       0x11: HDMI2

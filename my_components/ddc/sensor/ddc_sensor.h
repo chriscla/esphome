@@ -1,9 +1,7 @@
 #pragma once
 #include "esphome/core/component.h"
-#include "esphome/core/log.h"
 #include "esphome/components/sensor/sensor.h"
-#include "esphome/components/hdmiddc/ddc_device.h"
-
+#include "esphome/components/ddc/ddc_device.h"
 
 #define DDC_BRIGHTNESS_ID 0x10
 
@@ -16,7 +14,7 @@ class DDCSensor :
  public:
   
   void set_ddc_device(DDCDevice *ddc_device) { this->ddc_device_ = ddc_device; }
-  void add_brightness_sensor(sensor::Sensor *brightness_sensor) { brightness_sensor_ = brightness_sensor; }
+  void add_brightness_sensor(sensor::Sensor *brightness_sensor) { this->brightness_sensor_ = brightness_sensor; }
 
   void update() override;
   void dump_config() override;

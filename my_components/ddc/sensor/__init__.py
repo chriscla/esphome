@@ -1,6 +1,5 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome import core
 from esphome.components import sensor
 from .. import ddc_ns, DDCDevice
 from esphome.const import (
@@ -12,7 +11,7 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT
 )
 
-DEPENDENCIES = ["hdmiddc"]
+DEPENDENCIES = ["ddc"]
 
 CONF_DDC_ID = "ddc_id"
 DDCSensorComponent = ddc_ns.class_("DDCSensor", cg.PollingComponent)

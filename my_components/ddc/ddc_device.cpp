@@ -1,17 +1,15 @@
 #include "ddc_device.h"
 
-namespace esphome
-{
-  namespace ddc
-  {
+namespace esphome {
+namespace ddc {
 
     static const char *const TAG = "ddcdevice";
 
 
-    // void DDCDevice::dump_config()
-    // {
-    //   LOG_I2C_DEVICE(this);
-    // }
+    void DDCDevice::dump_config()
+    {
+      LOG_I2C_DEVICE(this);
+    }
 
     // void DDCDevice::control(const std::string &value)
     // {
@@ -105,5 +103,6 @@ namespace esphome
       
       return result;
     }
+
   } // end class
 }

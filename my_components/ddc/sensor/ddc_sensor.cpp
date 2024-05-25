@@ -1,9 +1,9 @@
 #include "ddc_sensor.h"
 
-namespace esphome
-{
-namespace ddc
-{
+using namespace esphome;
+
+namespace esphome{
+namespace ddc {
 
   static const char *const TAG = "ddcsensor";
 
