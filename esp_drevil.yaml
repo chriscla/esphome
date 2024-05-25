@@ -13,9 +13,10 @@ external_components:
     
 # Enable logging
 logger:
-  level: VERBOSE
+  level: DEBUG
   logs:
     adc: ERROR
+    sensor: ERROR
 
 # Enable Home Assistant API
 api:
@@ -35,11 +36,10 @@ wifi:
     password: !secret ap_password
   
 i2c:
-  scl: D1
-  sda: D2
+  scl: SCL
+  sda: SDA
   scan: False
   frequency: 50khz
-  id: i2c_bus_a
 
 spi:
   clk_pin: D5
@@ -50,15 +50,18 @@ spi:
 a7105:
   cs_pin: D8
 
-select:
+sensor:
   - platform: hdmiddc
-    name: "HDMI Input Select"
-    id: hdmi_input_select2
-    i2c_id: i2c_bus_a
-    options: 
-      0x01: DISPLAYPORT
-      0x03: HDMI1
-      0x11: HDMI2
+    name: "DDC Brightness"
+
+# select:
+#   - platform: hdmiddc
+#     name: "HDMI Input Select"
+#     id: hdmi_input_select
+#     options: 
+#       0x01: DISPLAYPORT
+#       0x03: HDMI1
+#       0x11: HDMI2
 
 binary_sensor:
   - platform: gpio
@@ -107,7 +110,6 @@ binary_sensor:
 #               id: usb_input_sensor
 #               state: "2"
 
-
 light:
   - platform: neewer_light
     id: left_panel
@@ -128,4 +130,3 @@ text_sensor:
   - platform: template
     name: "Active USB Input"
     id: usb_input_sensor
-
