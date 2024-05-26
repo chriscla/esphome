@@ -11,22 +11,7 @@ namespace ddc {
       LOG_I2C_DEVICE(this);
     }
 
-    // void DDCDevice::control(const std::string &value)
-    // {
 
-    //   ESP_LOGI(TAG, "Requested to control. New Value: %s", value.c_str());
-
-    //   auto idx = this->index_of(value);
-    //   if (idx.has_value())
-    //   {
-    //     uint8_t mapping = this->mappings_.at(idx.value());
-    //     ESP_LOGI(TAG, "Setting datapoint value to 0x%02x:%s", mapping, value.c_str());
-    //     this->setVCP(0x60, mapping);
-    //     return;
-    //   }
-
-    //   ESP_LOGW(TAG, "Invalid value %s", value.c_str());
-    // }
 
     // op: VCP opcode. Can be found with ddc capabilities
     // value: 16bit value
@@ -66,7 +51,7 @@ namespace ddc {
 
     // op: VCP opcode. Can be found with ddc capabilities
     // value: 16bit value
-    uint16_t DDCDevice::getVCP(uint8_t op)
+    void DDCDevice::getVCP(uint8_t op,  std::function<void(uint16_t)> result_callback)
     {
 
       ESP_LOGI(TAG, "Starting VCP Get.  op: 0x%02X", op);
@@ -85,23 +70,23 @@ namespace ddc {
       if (write_err != i2c::ERROR_OK)
       {
         ESP_LOGW(TAG, "VCP Get write failed. op: 0x%02x  err: %d", op, write_err);
-        return 0;
+        return;
       }
 
-      esphome::delay_microseconds_safe(45000);
+      this->set_timeout("VCPGet", 4500, [this, result_callback]() {
+        uint8_t response[12];
+        auto read_err = this->read(response, sizeof(response));
+        if (read_err != i2c::ERROR_OK)
+        {
+          ESP_LOGW(TAG, "VCP Get Read Failed. err: %d", read_err);
+          return;
+        }
 
-      uint8_t response[12];
-      auto read_err = this->read(response, sizeof(response));
-      if (read_err != i2c::ERROR_OK)
-      {
-        ESP_LOGW(TAG, "VCP Get Read Failed: op: 0x%02x err: %d", op, read_err);
-        return 0;
-      }
-
-      uint16_t result = (response[8] << 8) + response[9];
-      ESP_LOGI(TAG, "Finished VCP Get.  Response: 0x%04x", result);
-      
-      return result;
+        uint16_t result = (response[8] << 8) + response[9];
+        ESP_LOGI(TAG, "Finished VCP Get.  Response: 0x%04x", result);
+        
+        result_callback(result);
+      });
     }
 
   } // end class

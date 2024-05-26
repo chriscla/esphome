@@ -1,17 +1,18 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import i2c, select
+from esphome.components import select
+from .. import ddc_ns, DDCDevice
 from esphome.const import (
     CONF_OPTIONS,
 )
 
-DEPENDENCIES = ["i2c"]
+DEPENDENCIES = ["ddc"]
+CONF_DDC_ID = "ddc_id"
 
 # This is what other objects would use to refer to this.
 CONF_DDC_INPUT_SELECT = "ddc_input_select_id"
 
-ddccontrol_ns = cg.esphome_ns.namespace("ddccontrol")
-DDC_INPUT_SELECT = ddccontrol_ns.class_("DDCControl", select.Select, i2c.I2CDevice, cg.Component)
+DDCSelectComponent = ddc_ns.class_("DDCSelectComponent", select.Select, cg.Component)
 
 def ensure_option_map(value):
     cv.check_not_templatable(value)
@@ -29,14 +30,16 @@ def ensure_option_map(value):
 
 CONFIG_SCHEMA = select.SELECT_SCHEMA.extend(
     {
-        cv.GenerateID(): cv.declare_id(DDC_INPUT_SELECT), 
+        cv.GenerateID(): cv.declare_id(DDCSelectComponent),
+        cv.GenerateID(CONF_DDC_ID): cv.use_id(DDCDevice),
         cv.Required(CONF_OPTIONS): ensure_option_map,       
     }
-).extend(cv.COMPONENT_SCHEMA).extend(i2c.i2c_device_schema(0x37))
+).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
     options_map = config[CONF_OPTIONS]
     var = await select.new_select(config, options=list(options_map.values()))
+    ddc_bus = await cg.get_variable(config[CONF_DDC_ID])
+    cg.add(var.set_ddc_device(ddc_bus))
     await cg.register_component(var, config)
-    await i2c.register_i2c_device(var, config)
     cg.add(var.set_select_mappings(list(options_map.keys())))

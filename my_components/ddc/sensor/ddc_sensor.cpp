@@ -25,9 +25,10 @@ namespace esphome
     void DDCSensor::update()
     {
       ESP_LOGD(TAG, "Updating DDC Sensor");
-      uint16_t brightness = this->ddc_device_->getVCP(DDC_BRIGHTNESS_ID);
-      ESP_LOGI(TAG, "Brightness: %d", brightness);
-      this->brightness_sensor_->publish_state(brightness);
+      this->ddc_device_->getVCP(DDC_BRIGHTNESS_ID, [this](uint16_t value) {
+        ESP_LOGI(TAG, "Brightness Read at: %d", value);
+        this->brightness_sensor_->publish_state(value);
+      });
     }
 
   } // end class

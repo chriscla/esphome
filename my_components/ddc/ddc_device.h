@@ -16,13 +16,10 @@ class DDCDevice :
  public:
   
   void dump_config() override;
-  //void set_select_mappings(std::vector<uint8_t> mappings) { this->mappings_ = std::move(mappings); }
 
   void setVCP(uint8_t op, uint16_t value);
-  uint16_t getVCP(uint8_t op);
-    //void control(const std::string &value) override;
+  void getVCP(uint8_t op, std::function<void(uint16_t)> result_callback);
 
-    //std::vector<uint8_t> mappings_;
   }; //end class
 }  // namespace ddccontrol
 }  // namespace esphome
