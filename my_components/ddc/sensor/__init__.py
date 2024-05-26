@@ -5,7 +5,7 @@ from .. import ddc_ns, DDCDevice
 from esphome.const import (
     CONF_ID,
     CONF_BRIGHTNESS,
-    CONF_UNIT_OF_MEASUREMENT,
+    ICON_BRIGHTNESS_5,
     UNIT_LUX,
     DEVICE_CLASS_ILLUMINANCE,
     STATE_CLASS_MEASUREMENT
@@ -22,7 +22,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.GenerateID(CONF_DDC_ID): cv.use_id(DDCDevice),
         cv.Optional(CONF_BRIGHTNESS): sensor.sensor_schema(
             unit_of_measurement=UNIT_LUX,
-            accuracy_decimals=0,
+            accuracy_decimals=1,
+            icon=ICON_BRIGHTNESS_5,
             device_class=DEVICE_CLASS_ILLUMINANCE,
             state_class=STATE_CLASS_MEASUREMENT
         )
@@ -33,6 +34,8 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     ddc_bus = await cg.get_variable(config[CONF_DDC_ID])
     cg.add(var.set_ddc_device(ddc_bus))
+    await cg.register_component(var, config)
+
     if CONF_BRIGHTNESS in config:
         sens = await sensor.new_sensor(config[CONF_BRIGHTNESS])
         cg.add(var.add_brightness_sensor(sens))

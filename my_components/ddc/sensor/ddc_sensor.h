@@ -16,6 +16,7 @@ class DDCSensor :
   void set_ddc_device(DDCDevice *ddc_device) { this->ddc_device_ = ddc_device; }
   void add_brightness_sensor(sensor::Sensor *brightness_sensor) { this->brightness_sensor_ = brightness_sensor; }
 
+  void setup() override;
   void update() override;
   void dump_config() override;
 
