@@ -16,7 +16,6 @@ namespace esphome
 
     void DDCSelectComponent::control(const std::string &value)
     {
-
       ESP_LOGI(TAG, "Requested to control. New Value: %s", value.c_str());
 
       auto idx = this->index_of(value);
