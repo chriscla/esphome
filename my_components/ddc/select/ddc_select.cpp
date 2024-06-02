@@ -24,6 +24,7 @@ namespace esphome
         uint8_t mapping = this->mappings_.at(idx.value());
         ESP_LOGI(TAG, "Setting datapoint value to 0x%02x:%s", mapping, value.c_str());
         this->ddc_device_->setVCP(0x60, mapping);
+        this->publish_state(value);
         return;
       }
 

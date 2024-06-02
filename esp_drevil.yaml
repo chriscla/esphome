@@ -68,23 +68,23 @@ select:
       0x03: HDMI1
       0x11: HDMI2
 
-binary_sensor:
-  - platform: gpio
-    pin: 
-      number: D4
-      inverted: true
-    id: button_1
-    name: Button 1
-    filters:
-      - delayed_on: 10ms
-  - platform: gpio
-    pin: 
-      number: D3
-      inverted: true
-    id: button_2
-    name: Button 2
-    filters:
-      - delayed_on: 10ms
+# binary_sensor:
+#   - platform: gpio
+#     pin: 
+#       number: D4
+#       inverted: true
+#     id: button_1
+#     name: Button 1
+#     filters:
+#       - delayed_on: 10ms
+#   - platform: gpio
+#     pin: 
+#       number: D3
+#       inverted: true
+#     id: button_2
+#     name: Button 2
+#     filters:
+#       - delayed_on: 10ms
 
 sensor:
   - platform: adc
@@ -105,7 +105,7 @@ sensor:
               option: "DISPLAYPORT"
           - text_sensor.template.publish: 
               id: usb_input_sensor
-              state: "1"              
+              state: !lambda 'return "1";'            
       - below: 150
         then:
           - select.set:
@@ -113,7 +113,7 @@ sensor:
               option: "HDMI2"
           - text_sensor.template.publish: 
               id: usb_input_sensor
-              state: "2"
+              state: !lambda 'return "2";'
 
 light:
   - platform: neewer_light
@@ -135,3 +135,9 @@ text_sensor:
   - platform: template
     name: "Active USB Input"
     id: usb_input_sensor
+    lambda: |-
+      if (id(photocell_measurement).state > 150.0) {
+        return {"1"};
+      } else {
+        return {"2"};
+      }
