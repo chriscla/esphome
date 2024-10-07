@@ -20,8 +20,8 @@ api:
   encryption:
     key: !secret api_key
 
-# web_server:
-#   port: 80
+web_server:
+  port: 80
 
 ota:
   password: !secret ota_password
@@ -68,6 +68,18 @@ select:
       0x03: HDMI1
       0x11: HDMI2
 
+number:
+  - platform: "template"
+    name: "Detection LX Value"
+    id: detection_lx
+    unit_of_measurement: "lx"
+    min_value: 0.0
+    max_value: 2000000.0
+    restore_value: true
+    initial_value: 30.0
+    step: 1.0
+    optimistic: true
+
 # binary_sensor:
 #   - platform: gpio
 #     pin: 
@@ -98,7 +110,7 @@ sensor:
       - lambda: |-
           return (x / 10000.0) * 2000000.0;
     on_value_range: 
-      - above: 150
+      - above: !lambda 'return id(detection_lx).state;'
         then:
           - select.set: 
               id: hdmi_input_select
@@ -106,7 +118,7 @@ sensor:
           - text_sensor.template.publish: 
               id: usb_input_sensor
               state: !lambda 'return "1";'            
-      - below: 150
+      - below: !lambda 'return id(detection_lx).state;'
         then:
           - select.set:
               id: hdmi_input_select
@@ -136,7 +148,7 @@ text_sensor:
     name: "Active USB Input"
     id: usb_input_sensor
     lambda: |-
-      if (id(photocell_measurement).state > 150.0) {
+      if (id(photocell_measurement).state > id(detection_lx).state) {
         return {"1"};
       } else {
         return {"2"};
