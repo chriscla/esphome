@@ -28,11 +28,10 @@ def ensure_option_map(value):
 
     return value
 
-CONFIG_SCHEMA = select.SELECT_SCHEMA.extend(
+CONFIG_SCHEMA = select.select_schema(DDCSelectComponent).extend(
     {
-        cv.GenerateID(): cv.declare_id(DDCSelectComponent),
         cv.GenerateID(CONF_DDC_ID): cv.use_id(DDCDevice),
-        cv.Required(CONF_OPTIONS): ensure_option_map,       
+        cv.Required(CONF_OPTIONS): ensure_option_map,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
