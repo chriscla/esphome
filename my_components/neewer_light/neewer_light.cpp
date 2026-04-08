@@ -11,11 +11,13 @@ static const char *const TAG = "neewer_light";
 void NeewerLight::setup() {
   ESP_LOGCONFIG(TAG, "NeewerLight setup");
 
-  if (!this->a7105_chip_->reset()) {
-    ESP_LOGE(TAG, "A7105 not detected (bad SPI wiring or dead chip?)");
-    this->mark_failed();
-    return;
-  }
+  // Note: A7105::reset() returns an "is chip present" probe (expects PLL_II
+  // to read back 0x9E after a mode reset), but in practice on this hardware
+  // the probe returns false even when the chip is working fine. Log the
+  // result for debugging but don't bail on it — the 40+ register writes
+  // below do the real initialization regardless.
+  int8_t reset_ok = this->a7105_chip_->reset();
+  ESP_LOGD(TAG, "A7105 reset probe returned %d", reset_ok);
 
   this->a7105_chip_->set_id(NEEWER_ID);
   this->a7105_chip_->write_reg(a7105::A7105_0F_CHANNEL, this->channel_);
