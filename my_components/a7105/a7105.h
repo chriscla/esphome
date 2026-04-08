@@ -135,7 +135,7 @@ enum A7105_MASK {
  */
 class A7105 : public Component,
               public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING,
-                                    spi::DATA_RATE_10MHZ> {
+                                    spi::DATA_RATE_1MHZ> {
     public:
         void setup() override;
         

@@ -66,7 +66,7 @@ namespace ddc {
         }; 
 
       ESP_LOGD(TAG, "Sending VCP Get: %s", format_hex_pretty(bytes, sizeof(bytes)).c_str());
-      auto write_err = this->write(bytes, sizeof(bytes), true);
+      auto write_err = this->write(bytes, sizeof(bytes));
       if (write_err != i2c::ERROR_OK)
       {
         ESP_LOGW(TAG, "VCP Get write failed. op: 0x%02x  err: %d", op, write_err);
