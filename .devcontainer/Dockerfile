@@ -112,8 +112,6 @@ ENV PATH=$PATH:/usr/local/share/npm-global/bin
 ENV SHELL=/bin/zsh
 ENV EDITOR=nano
 ENV VISUAL=nano
-# zsh shell setup (.zshrc, oh-my-zsh, theme, plugins) is owned by chezmoi
-# via the dotfiles install command in user settings — see devcontainer.json.
 
 # Install Claude Code globally
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}

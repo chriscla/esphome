@@ -1,8 +1,9 @@
 #!/bin/bash
-set -euo pipefail  # Exit on error, undefined vars, and pipeline failures
-IFS=$'\n\t'        # Stricter word splitting
+set -euo pipefail
+IFS=$'\n\t'
 
-# 1. Extract Docker DNS info BEFORE any flushing
+# Extract Docker's embedded DNS NAT rules (targeting 127.0.0.11) before we
+# flush iptables, so we can selectively restore them after.
 DOCKER_DNS_RULES=$(iptables-save -t nat | grep "127\.0\.0\.11" || true)
 
 # Flush existing rules and delete existing ipsets
@@ -62,7 +63,7 @@ while read -r cidr; do
     ipset add -exist allowed-domains "$cidr"
 done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 
-# Resolve and add other allowed domains
+# Resolve and add other allowed domains.
 #
 # Buckets:
 #   * Claude Code / Anthropic infra
@@ -72,29 +73,44 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 #   * ESPHome (esphome.io and the dashboard's update channel)
 #   * PlatformIO (registry, API, dl, collector)
 #   * Espressif (toolchains, firmware downloads used by platformio for ESP targets)
-for domain in \
-    "api.anthropic.com" \
-    "sentry.io" \
-    "statsig.anthropic.com" \
-    "statsig.com" \
-    "marketplace.visualstudio.com" \
-    "vscode.blob.core.windows.net" \
-    "update.code.visualstudio.com" \
-    "registry.npmjs.org" \
-    "pypi.org" \
-    "files.pythonhosted.org" \
-    "pypi.python.org" \
-    "esphome.io" \
-    "platformio.org" \
-    "api.platformio.org" \
-    "registry.platformio.org" \
-    "api.registry.platformio.org" \
-    "collector.platformio.org" \
-    "dl.espressif.com" \
-    "raw.githubusercontent.com" \
-    "objects.githubusercontent.com"; do
-    echo "Resolving $domain..."
-    ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
+DOMAINS=(
+    "api.anthropic.com"
+    "sentry.io"
+    "statsig.anthropic.com"
+    "statsig.com"
+    "marketplace.visualstudio.com"
+    "vscode.blob.core.windows.net"
+    "update.code.visualstudio.com"
+    "registry.npmjs.org"
+    "pypi.org"
+    "files.pythonhosted.org"
+    "pypi.python.org"
+    "esphome.io"
+    "platformio.org"
+    "api.platformio.org"
+    "registry.platformio.org"
+    "api.registry.platformio.org"
+    "collector.platformio.org"
+    "dl.espressif.com"
+    "raw.githubusercontent.com"
+    "objects.githubusercontent.com"
+)
+
+# Resolve all domains in parallel (dig each in the background, then wait)
+# and cache results per-domain, so the subsequent validation loop stays
+# simple and serial. Cuts postStart latency from ~20*RTT to ~1*RTT.
+RESOLVE_TMP=$(mktemp -d)
+trap 'rm -rf "$RESOLVE_TMP"' EXIT
+
+echo "Resolving ${#DOMAINS[@]} domains in parallel..."
+for domain in "${DOMAINS[@]}"; do
+    dig +noall +answer +time=3 +tries=2 A "$domain" \
+        | awk '$4 == "A" {print $5}' > "$RESOLVE_TMP/$domain" &
+done
+wait
+
+for domain in "${DOMAINS[@]}"; do
+    ips=$(cat "$RESOLVE_TMP/$domain")
     if [ -z "$ips" ]; then
         echo "ERROR: Failed to resolve $domain"
         exit 1
@@ -110,15 +126,20 @@ for domain in \
     done < <(echo "$ips")
 done
 
-# Get host IP from default route
-HOST_IP=$(ip route | grep default | cut -d" " -f3)
-if [ -z "$HOST_IP" ]; then
-    echo "ERROR: Failed to detect host IP"
+# Derive the LAN subnet from the actual kernel routing table rather than
+# hard-coding a /24: read the scope-link route on the same interface as
+# the default route. This is needed to reach ESP devices on the host LAN.
+DEFAULT_IFACE=$(ip -4 route show default | awk '{print $5; exit}')
+if [ -z "$DEFAULT_IFACE" ]; then
+    echo "ERROR: Failed to detect default interface"
     exit 1
 fi
-
-HOST_NETWORK=$(echo "$HOST_IP" | sed "s/\.[0-9]*$/.0\/24/")
-echo "Host network detected as: $HOST_NETWORK"
+HOST_NETWORK=$(ip -4 route show dev "$DEFAULT_IFACE" scope link | awk '{print $1; exit}')
+if [ -z "$HOST_NETWORK" ]; then
+    echo "ERROR: Failed to detect host network on $DEFAULT_IFACE"
+    exit 1
+fi
+echo "Host network detected as: $HOST_NETWORK (via $DEFAULT_IFACE)"
 
 # Allow LAN traffic (host network) — needed to reach ESP devices on the local network
 iptables -A INPUT  -s "$HOST_NETWORK" -j ACCEPT
