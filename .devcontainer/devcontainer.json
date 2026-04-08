@@ -1,0 +1,98 @@
+{
+  "name": "ESPHome + Claude Code Sandbox",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "TZ": "${localEnv:TZ:America/Los_Angeles}",
+      "CLAUDE_CODE_VERSION": "latest",
+      "GIT_DELTA_VERSION": "0.18.2"
+    }
+  },
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-python.python",
+        "ms-vscode.makefile-tools",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "esphome.esphome-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+          },
+          "zsh": {
+            "path": "zsh"
+          }
+        }
+      }
+    }
+  },
+  "remoteUser": "node",
+  "updateRemoteUserUID": true,
+  "mounts": [
+    // ~/.claude strategy: container-local named volume for runtime state
+    // (.claude.json, projects/, todos/, backups/, ...), with host
+    // bind-mounts overlaid for read-mostly config so host and container
+    // Claude Code instances can run *concurrently* without racing on
+    // .claude.json. See README/comments above for the "why".
+    "source=esphome-claude-state,target=/home/node/.claude,type=volume",
+    "source=${localEnv:HOME}/.claude/settings.json,target=/home/node/.claude/settings.json,type=bind",
+    "source=${localEnv:HOME}/.claude/CLAUDE.md,target=/home/node/.claude/CLAUDE.md,type=bind",
+    "source=${localEnv:HOME}/.claude/agents,target=/home/node/.claude/agents,type=bind",
+    "source=${localEnv:HOME}/.claude/skills,target=/home/node/.claude/skills,type=bind",
+    "source=${localEnv:HOME}/.claude/commands,target=/home/node/.claude/commands,type=bind",
+
+    // Persistent shell history (named volume, scoped to this devcontainer).
+    "source=esphome-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+
+    // Cache volumes shared across rebuilds. NOT scoped to devcontainerId so
+    // recreating the container keeps the cache. The chezmoi/dotfiles flow
+    // populates these with externals (oh-my-zsh, plugins, etc.) — without
+    // these mounts, every rebuild re-downloads everything (~30-60s).
+    //
+    // ~/.cache    : chezmoi external cache, uv, pip
+    // ~/.local    : chezmoi source state + XDG share data (oh-my-zsh if XDG)
+    // ~/.oh-my-zsh: default OMZ install location (non-XDG)
+    // ~/.tmux     : tmux plugin manager + plugins
+    // ~/.platformio / ~/.espressif: ESP toolchains/platforms (the big ones)
+    "source=esphome-home-cache,target=/home/node/.cache,type=volume",
+    "source=esphome-home-local,target=/home/node/.local,type=volume",
+    "source=esphome-home-ohmyzsh,target=/home/node/.oh-my-zsh,type=volume",
+    "source=esphome-home-tmux,target=/home/node/.tmux,type=volume",
+    "source=esphome-platformio-cache,target=/home/node/.platformio,type=volume",
+    "source=esphome-espressif-cache,target=/home/node/.espressif,type=volume"
+  ],
+  "containerEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
+  },
+  // Mount the project at a stable, project-unique path at the filesystem
+  // root. This keeps Claude Code's per-project history key (which is
+  // derived from cwd) stable across container rebuilds.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/esphome,type=bind,consistency=delegated",
+  "workspaceFolder": "/esphome",
+  // Runs on the HOST before container creation. Ensures the host paths
+  // that we bind-mount into ~/.claude exist as the right type (file vs
+  // dir), so Docker doesn't auto-create them as empty directories.
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude/agents ${localEnv:HOME}/.claude/skills ${localEnv:HOME}/.claude/commands && touch ${localEnv:HOME}/.claude/settings.json ${localEnv:HOME}/.claude/CLAUDE.md",
+
+  // Fix ownership on volume mount points (named volumes can be created or
+  // reused with stale ownership), then apply platformio settings now that
+  // ~/.platformio is writable by the node user. Note: /home/node/.claude
+  // is chowned NON-recursively so we don't try to chown the host bind
+  // mounts overlaid inside it.
+  "postCreateCommand": "sudo chown node:node /home/node/.claude && sudo chown -R node:node /home/node/.cache /home/node/.local /home/node/.oh-my-zsh /home/node/.tmux /home/node/.platformio /home/node/.espressif && platformio settings set enable_telemetry No && platformio settings set check_platformio_interval 1000000",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand"
+}
