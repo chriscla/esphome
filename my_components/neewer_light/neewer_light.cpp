@@ -11,7 +11,11 @@ static const char *const TAG = "neewer_light";
 void NeewerLight::setup() {
   ESP_LOGCONFIG(TAG, "NeewerLight setup");
 
-  this->a7105_chip_->reset();
+  if (!this->a7105_chip_->reset()) {
+    ESP_LOGE(TAG, "A7105 not detected (bad SPI wiring or dead chip?)");
+    this->mark_failed();
+    return;
+  }
 
   this->a7105_chip_->set_id(NEEWER_ID);
   this->a7105_chip_->write_reg(a7105::A7105_0F_CHANNEL, this->channel_);
@@ -68,7 +72,9 @@ void NeewerLight::setup() {
   this->a7105_chip_->write_reg(a7105::A7105_30_IFAT, 0x01);
   this->a7105_chip_->write_reg(a7105::A7105_31_RSCALE, 0x0F);
 
-  // VCO Calibration
+  // VCO Calibration. Polls CALC register until the chip clears it (done)
+  // or 500 ms elapses. yield() feeds the cooperative scheduler / soft WDT
+  // on ESP8266 in case calibration hangs.
   this->a7105_chip_->write_reg(a7105::A7105_02_CALC, 0x01);
   uint32_t start_ms = millis();
   while (millis() - start_ms < 500) {
@@ -77,6 +83,7 @@ void NeewerLight::setup() {
     if (!calc_value) {
       break;
     }
+    yield();
   }
   if (millis() - start_ms >= 500) {
     ESP_LOGE(TAG, "VCO calibration timed out");

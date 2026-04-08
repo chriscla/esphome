@@ -44,5 +44,5 @@ class NeewerLight :
     int8_t power_state_;
 
   }; //end class
-}  // namespace light
+}  // namespace neewer_light
 }  // namespace esphome
